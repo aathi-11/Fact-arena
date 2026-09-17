@@ -143,8 +143,3 @@ The system includes a 5-scenario benchmark harness (`eval/run_eval.py`):
 ---
 
 
-### Q4: How are cost and latency optimized?
-**Answer**: We employ a dual-tier model architecture:
-- **Debaters & Claim Normalizers**: `llama-3.1-8b-instant` (ultra-fast LPU throughput for multi-round turns).
-- **Supreme Judge**: `llama-3.3-70b-versatile` (reserved exclusively for final reasoning & synthesis).
-This cost-tiering strategy keeps per-debate API latency under 2 seconds while maintaining 70B reasoning rigor.
