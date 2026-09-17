@@ -142,16 +142,6 @@ The system includes a 5-scenario benchmark harness (`eval/run_eval.py`):
 
 ---
 
-## 🛡️ Anticipated Q&A (Technical Submission Brief)
-
-### Q1: How does the system handle hallucinated citations?
-**Answer**: Before the Supreme Judge evaluates the debate transcript, `src/agents/verify.py` executes a citation verification pass. Every cited ID (`[E1]`, `[E99]`) is matched against the `evidence_pool`. If an agent cites a nonexistent ID, the guardrail flags the violation, logs a warning, and forces the Judge to discount the ungrounded claim while lowering overall verdict confidence.
-
-### Q2: Why use Multi-Agent Debate instead of Single-Agent RAG?
-**Answer**: Single-agent RAG exhibits confirmation bias based on initial retrieval formulation. Adversarial Pro vs. Con debaters execute stance-conditioned web queries in parallel, guaranteeing that counter-evidence and conflicting study parameters are brought to light (as demonstrated in the ambiguous coffee/cardiovascular disease scenario).
-
-### Q3: How is confidence calibration evaluated?
-**Answer**: The evaluation harness (`eval/run_eval.py`) explicitly checks calibration on known-ambiguous claims. If the Judge outputs a confidence > 85% or fails to populate the `uncertainty_note` on contested topics, the evaluation suite raises a calibration failure error.
 
 ### Q4: How are cost and latency optimized?
 **Answer**: We employ a dual-tier model architecture:
