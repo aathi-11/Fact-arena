@@ -6,7 +6,7 @@ import streamlit as st
 # Ensure project root is in path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from src.graph.debate_graph import run_debate
+from src.graph.debate_graph import get_debate_graph
 from src.config import MAX_DEBATE_ROUNDS, JUDGE_MODEL, DEBATER_MODEL
 
 # ---------------------------------------------------------
@@ -129,9 +129,25 @@ default_input = benchmark_claims[selected_preset] if selected_preset and benchma
 
 st.sidebar.divider()
 st.sidebar.markdown("### ⚙️ Engine Parameters")
-rounds_input = st.sidebar.slider("Debate Rounds", min_value=1, max_value=5, value=MAX_DEBATE_ROUNDS)
+
+# Number input + quick dropdown for debate rounds
+rounds_mode = st.sidebar.radio(
+    "Debate Round Mode:",
+    ["1 Round (Fast ~3s)", "2 Rounds (Balanced)", "3 Rounds (Deep Debate)", "Custom Number"],
+    index=0
+)
+
+if rounds_mode == "1 Round (Fast ~3s)":
+    rounds_input = 1
+elif rounds_mode == "2 Rounds (Balanced)":
+    rounds_input = 2
+elif rounds_mode == "3 Rounds (Deep Debate)":
+    rounds_input = 3
+else:
+    rounds_input = st.sidebar.number_input("Custom Rounds (1-5)", min_value=1, max_value=5, value=1, step=1)
 
 st.sidebar.markdown(f"""
+- **Active Rounds**: `{rounds_input}`
 - **Judge Model**: `{JUDGE_MODEL}`
 - **Debater Model**: `{DEBATER_MODEL}`
 - **Search Engine**: Tavily Live Web API
@@ -139,7 +155,7 @@ st.sidebar.markdown(f"""
 """)
 
 st.sidebar.divider()
-st.sidebar.info("💡 **Cost Tiering Architecture**: Fast 8B models generate adversarial turns while heavy 70B model handles judicial synthesis.")
+st.sidebar.info("💡 **Cost & Speed Architecture**: Fast LPU models generate adversarial turns; 70B/120B model handles judicial synthesis.")
 
 # ---------------------------------------------------------
 # Main UI Layout
@@ -147,9 +163,9 @@ st.sidebar.info("💡 **Cost Tiering Architecture**: Fast 8B models generate adv
 st.markdown('<div class="main-header"><div class="main-title">⚖️ Veritas Agents</div><div class="sub-title">Autonomous Multi-Agent Fact-Checking System (Claim → Pro ⇄ Con → Supreme Judge)</div></div>', unsafe_allow_html=True)
 
 claim_input = st.text_input(
-    "Enter Claim to Fact-Check:",
+    "Ask your question or claim to verify:",
     value=default_input,
-    placeholder="e.g. Moderate coffee consumption increases the risk of heart disease..."
+    placeholder="Ask your question or claim here..."
 )
 
 col_btn1, col_btn2 = st.columns([1, 4])
@@ -157,11 +173,49 @@ with col_btn1:
     run_button = st.button("🚀 Execute Fact Check", type="primary", use_container_width=True)
 
 if run_button and claim_input.strip():
-    with st.spinner("Decomposing claim, retrieving live web search evidence, and conducting adversarial debate..."):
-        debate_result = run_debate(claim=claim_input.strip(), max_rounds=rounds_input)
+    # Stream real-time progress using st.status
+    status_container = st.status("🚀 Initializing Multi-Agent Graph...", expanded=True)
     
-    st.success("Debate and Judicial Review Completed!")
+    graph = get_debate_graph()
+    initial_state = {
+        "claim": claim_input.strip(),
+        "sub_claims": [],
+        "round": 1,
+        "max_rounds": rounds_input,
+        "pro_turns": [],
+        "con_turns": [],
+        "evidence_pool": {},
+        "verdict": None,
+        "latency_log": {}
+    }
     
+    final_state = dict(initial_state)
+    
+    for step in graph.stream(initial_state):
+        node_name = list(step.keys())[0]
+        node_output = step[node_name]
+        
+        # Merge updated state keys
+        for k, v in node_output.items():
+            final_state[k] = v
+            
+        if node_name == "normalize":
+            status_container.write(f"🧩 **Claim Decomposed**: {len(final_state.get('sub_claims', []))} atomic sub-claims")
+        elif node_name == "pro_turn":
+            cur_r = final_state.get("round", 1)
+            status_container.write(f"🟢 **Pro Agent Round {cur_r}**: Retrieved live web evidence & generated supporting argument")
+        elif node_name == "con_turn":
+            cur_r = final_state.get("round", 1)
+            status_container.write(f"🔴 **Con Agent Round {cur_r}**: Retrieved live web evidence & generated refuting argument")
+        elif node_name == "advance_round":
+            status_container.write(f"🔄 **Advancing to Round {final_state.get('round', 1)}**")
+        elif node_name == "judge":
+            status_container.write("🏛️ **Supreme Judge**: Verification guardrail passed & verdict rendered!")
+
+    status_container.update(label="✅ Fact Check Execution Complete!", state="complete", expanded=False)
+    
+    debate_result = final_state
+
     # ---------------------------------------------------------
     # 1. Atomic Sub-Claims Section
     # ---------------------------------------------------------
@@ -272,5 +326,5 @@ if run_button and claim_input.strip():
         c1.metric("Normalize Claim", f"{lat.get('normalize_seconds', 0)}s")
         c2.metric("Pro Turns Total", f"{sum(lat.get('pro_turns_seconds', [])):.2f}s")
         c3.metric("Con Turns Total", f"{sum(lat.get('con_turns_seconds', [])):.2f}s")
-        c4.metric("Supreme Judge (70B)", f"{lat.get('judge_seconds', 0)}s")
+        c4.metric("Supreme Judge (70B/120B)", f"{lat.get('judge_seconds', 0)}s")
         st.caption(f"Total Execution Time: **{lat.get('total_seconds', 0)} seconds** across {len(evidence_pool)} retrieved web sources.")
