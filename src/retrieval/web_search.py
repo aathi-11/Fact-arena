@@ -1,58 +1,88 @@
 import logging
 from typing import List, Dict, Any
 from tavily import TavilyClient
+from ddgs import DDGS
 from src.config import TAVILY_API_KEY, MAX_EVIDENCE_PER_TURN
 
 logger = logging.getLogger(__name__)
 
+def search_tavily(query: str, max_results: int = MAX_EVIDENCE_PER_TURN) -> List[Dict[str, Any]]:
+    """Executes live web search using Tavily API."""
+    if not TAVILY_API_KEY:
+        return []
+    try:
+        client = TavilyClient(api_key=TAVILY_API_KEY)
+        response = client.search(
+            query=query,
+            max_results=max_results,
+            search_depth="advanced",
+            include_answer=False
+        )
+        results = []
+        for item in response.get("results", []):
+            title = item.get("title", "").strip()
+            url = item.get("url", "").strip()
+            snippet = item.get("content", item.get("snippet", "")).strip()
+            if title and url and snippet:
+                results.append({
+                    "title": title,
+                    "url": url,
+                    "snippet": snippet
+                })
+        return results
+    except Exception as e:
+        logger.warning(f"Tavily search API call failed for query '{query}': {e}")
+        return []
+
+def search_ddgs(query: str, max_results: int = MAX_EVIDENCE_PER_TURN) -> List[Dict[str, Any]]:
+    """Executes live web search using DuckDuckGo (DDGS) backup engine."""
+    try:
+        ddgs = DDGS()
+        raw_results = list(ddgs.text(query, max_results=max_results))
+        results = []
+        for item in raw_results:
+            title = item.get("title", "").strip()
+            url = item.get("href", "").strip()
+            snippet = item.get("body", "").strip()
+            if title and url and snippet:
+                results.append({
+                    "title": title,
+                    "url": url,
+                    "snippet": snippet
+                })
+        return results
+    except Exception as e:
+        logger.warning(f"DDGS live web search backup failed for query '{query}': {e}")
+        return []
+
 def search(query: str, max_results: int = MAX_EVIDENCE_PER_TURN) -> List[Dict[str, Any]]:
     """
-    Search Tavily for live web evidence related to query.
-    Returns a list of dicts with keys: 'title', 'url', 'snippet'.
-    Includes a realistic fallback mode if TAVILY_API_KEY is missing or fails.
+    Main entry point for web evidence retrieval.
+    Guarantees 100% REAL live web search results by trying Tavily API first,
+    and falling back to live DuckDuckGo web search if Tavily key is missing or fails.
+    No mock or synthetic evidence is ever generated.
     """
-    if TAVILY_API_KEY:
-        try:
-            client = TavilyClient(api_key=TAVILY_API_KEY)
-            response = client.search(query=query, max_results=max_results, search_depth="basic")
-            results = []
-            for item in response.get("results", []):
-                results.append({
-                    "title": item.get("title", "No Title"),
-                    "url": item.get("url", ""),
-                    "snippet": item.get("content", item.get("snippet", ""))
-                })
-            if results:
-                return results
-        except Exception as e:
-            logger.warning(f"Tavily search failed for query '{query}': {e}. Using offline fallback evidence.")
+    # 1. Primary: Tavily Live Search
+    results = search_tavily(query=query, max_results=max_results)
+    if results:
+        return results
+        
+    # 2. Query Simplification Retry for Tavily (remove stance bias words if query was too strict)
+    simplified_query = " ".join([w for w in query.split() if w.lower() not in ["supporting", "evidence", "refuting", "counter-evidence", "true", "false"]])
+    if simplified_query != query:
+        results = search_tavily(query=simplified_query, max_results=max_results)
+        if results:
+            return results
 
-    # Graceful Fallback evidence if Tavily key is unconfigured or search fails
-    logger.info(f"Using mock fallback evidence generator for query: {query}")
-    return [
-        {
-            "title": f"Web Source: Analysis of '{query}'",
-            "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/example_health_study",
-            "snippet": f"Peer-reviewed study examining {query}. Results indicate multifaceted health effects influenced by dosage, lifestyle factors, and individual genetic predispositions."
-        },
-        {
-            "title": f"Scientific Meta-Analysis on {query}",
-            "url": "https://www.nature.com/articles/meta_analysis_evidence",
-            "snippet": f"A comprehensive review of randomized controlled trials regarding {query}. Clinical trials show significant statistical variation depending on population demographics."
-        },
-        {
-            "title": f"Global Observatory Report: {query}",
-            "url": "https://www.who.int/news-room/fact-sheets/evidence_report",
-            "snippet": f"Official documentation and observational data tracking public health observations on {query} across multi-center cohort studies over a 10-year observational period."
-        },
-        {
-            "title": f"Harvard Health Publishing - {query}",
-            "url": "https://www.health.harvard.edu/blog/understanding_evidence",
-            "snippet": f"Harvard medical review highlighting nuances in {query}. Moderation and contextual factors play a major role in determining net outcomes."
-        },
-        {
-            "title": f"Reuters Fact Check: Examining {query}",
-            "url": "https://www.reuters.com/fact-check/evidence_breakdown",
-            "snippet": f"Fact checking investigation assessing empirical claims about {query}. Compiling primary source documentation and expert panel consensus."
-        }
-    ][:max_results]
+    # 3. Secondary Real Web Search: DuckDuckGo Live Search Engine
+    logger.info(f"Using live DuckDuckGo search backup for query: '{query}'")
+    results = search_ddgs(query=query, max_results=max_results)
+    if results:
+        return results
+        
+    if simplified_query != query:
+        results = search_ddgs(query=simplified_query, max_results=max_results)
+        if results:
+            return results
+
+    return []

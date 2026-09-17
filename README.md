@@ -5,7 +5,7 @@
 [![Groq LPU](https://img.shields.io/badge/LLM-Groq%20LPU-green.svg)](https://groq.com)
 [![Streamlit UI](https://img.shields.io/badge/UI-Streamlit-red.svg)](https://streamlit.io)
 
-**Veritas Agents** is an autonomous multi-agent debate and fact-checking architecture. Given a raw claim, it decomposes the assertion into atomic sub-claims, orchestrates an adversarial debate between **Pro** and **Con** debater agents equipped with live web search (Tavily), enforces strict evidence-grounding guardrails, and renders a calibrated verdict via a **Supreme Judge** agent (`llama-3.3-70b-versatile`).
+**Veritas Agents** is an autonomous multi-agent debate and fact-checking architecture. Given a raw claim or question, it decomposes the assertion into atomic sub-claims, orchestrates an adversarial debate between **Pro** and **Con** debater agents equipped with live web search (Tavily), enforces strict evidence-grounding guardrails, and renders a calibrated verdict via a **Supreme Judge** agent (`openai/gpt-oss-120b`).
 
 ---
 
@@ -13,18 +13,18 @@
 
 ```mermaid
 flowchart TD
-    A[Raw Claim Input] --> B[Claim Agent: Normalizer\nllama-3.1-8b-instant]
+    A[Raw Claim / Question Input] --> B[Claim Agent: Normalizer\nqwen/qwen3.8-27b]
     B --> C[Atomic Sub-Claims]
     C --> D[LangGraph Debate Loop]
     
-    subgraph D [Adversarial Debate Loop - Max Rounds: 3]
-        E[Pro Agent: Supporting Stance\n+ Tavily Web Search] --> F[Evidence Pool]
-        F --> G[Con Agent: Refuting Stance\n+ Tavily Web Search]
+    subgraph D [Adversarial Debate Loop]
+        E[Pro Agent: Supporting Stance\n+ Advanced Tavily Web Search] --> F[Evidence Pool]
+        F --> G[Con Agent: Refuting Stance\n+ Advanced Tavily Web Search]
         G -->|Round < Max| E
     end
     
     D --> H[Citation Verification Guardrail\nsrc/agents/verify.py]
-    H --> I[Supreme Judge Agent\nllama-3.3-70b-versatile]
+    H --> I[Supreme Judge Agent\nopenai/gpt-oss-120b]
     I --> J[Calibrated Verdict Card\nVerdict + Confidence + Rationale + Uncertainty Note]
 ```
 
@@ -44,7 +44,7 @@ flowchart TD
 ## 🌍 Environment Properties
 
 - **Multi-Agent**: Collaborative decomposition + Adversarial debate (Pro vs. Con) + Independent Judicial arbitration.
-- **Dynamic & Live**: Web environment changes continuously; live Tavily retrieval surfaces real-time empirical data.
+- **Dynamic & Live**: Web environment changes continuously; live Tavily retrieval (`search_depth="advanced"`) surfaces real-time empirical data.
 - **Stochastic & Non-Deterministic**: Open-ended web search & LLM generation conditioned by temperature controls.
 - **Sequential**: Multi-round debate transcript where each turn builds upon prior opponent arguments.
 - **Partially Observable**: Debaters retrieve distinct evidence subsets before merging into shared evidence pool.
@@ -71,7 +71,7 @@ veritas-agents/
 │   │   ├── claim_agent.py    # Claim decomposition agent
 │   │   ├── pro_agent.py      # Pro debater agent
 │   │   ├── con_agent.py      # Con debater agent
-│   │   ├── judge_agent.py    # Supreme Judge agent (70B)
+│   │   ├── judge_agent.py    # Supreme Judge agent (120B)
 │   │   └── verify.py         # Citation integrity & hallucination guardrail
 │   ├── graph/
 │   │   ├── __init__.py
@@ -112,7 +112,7 @@ Copy `.env.example` to `.env` and set your API keys:
 GROQ_API_KEY=your_groq_api_key_here
 TAVILY_API_KEY=your_tavily_api_key_here
 ```
-*(Note: If API keys are unconfigured, the system gracefully falls back to structured offline benchmark modes).*
+*(Note: If API keys are unconfigured, the system uses transparently labeled `[MOCK DEMO EVIDENCE]` to prevent synthetic data from impersonating real web domains).*
 
 ### 3. Run Automated Unit Tests
 ```bash
@@ -142,19 +142,3 @@ The system includes a 5-scenario benchmark harness (`eval/run_eval.py`):
 
 ---
 
-## 🛡️ Anticipated Q&A (Technical Submission Brief)
-
-### Q1: How does the system handle hallucinated citations?
-**Answer**: Before the Supreme Judge evaluates the debate transcript, `src/agents/verify.py` executes a citation verification pass. Every cited ID (`[E1]`, `[E99]`) is matched against the `evidence_pool`. If an agent cites a nonexistent ID, the guardrail flags the violation, logs a warning, and forces the Judge to discount the ungrounded claim while lowering overall verdict confidence.
-
-### Q2: Why use Multi-Agent Debate instead of Single-Agent RAG?
-**Answer**: Single-agent RAG exhibits confirmation bias based on initial retrieval formulation. Adversarial Pro vs. Con debaters execute stance-conditioned web queries in parallel, guaranteeing that counter-evidence and conflicting study parameters are brought to light (as demonstrated in the ambiguous coffee/cardiovascular disease scenario).
-
-### Q3: How is confidence calibration evaluated?
-**Answer**: The evaluation harness (`eval/run_eval.py`) explicitly checks calibration on known-ambiguous claims. If the Judge outputs a confidence > 85% or fails to populate the `uncertainty_note` on contested topics, the evaluation suite raises a calibration failure error.
-
-### Q4: How are cost and latency optimized?
-**Answer**: We employ a dual-tier model architecture:
-- **Debaters & Claim Normalizers**: `llama-3.1-8b-instant` (ultra-fast LPU throughput for multi-round turns).
-- **Supreme Judge**: `llama-3.3-70b-versatile` (reserved exclusively for final reasoning & synthesis).
-This cost-tiering strategy keeps per-debate API latency under 2 seconds while maintaining 70B reasoning rigor.
