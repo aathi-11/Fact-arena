@@ -1,0 +1,37 @@
+[
+  {
+    "id": "scenario_1",
+    "category": "Clear-false",
+    "claim": "The Great Wall of China is visible from space with the naked eye.",
+    "expected_verdict": "false",
+    "expected_max_confidence": 100
+  },
+  {
+    "id": "scenario_2",
+    "category": "Clear-true",
+    "claim": "Regular exercise reduces the risk of cardiovascular disease.",
+    "expected_verdict": "true",
+    "expected_max_confidence": 100
+  },
+  {
+    "id": "scenario_3",
+    "category": "Genuinely ambiguous",
+    "claim": "Moderate coffee consumption increases the risk of heart disease.",
+    "expected_verdict": "unverifiable",
+    "expected_max_confidence": 85
+  },
+  {
+    "id": "scenario_4",
+    "category": "Technically true / Misleading",
+    "claim": "Global average temperature increase of 1.5C has no impact on extreme weather events.",
+    "expected_verdict": "false",
+    "expected_max_confidence": 100
+  },
+  {
+    "id": "scenario_5",
+    "category": "Time-sensitive",
+    "claim": "Global lithium ion battery production volume doubled in the past 24 months.",
+    "expected_verdict": "unverifiable",
+    "expected_max_confidence": 90
+  }
+]

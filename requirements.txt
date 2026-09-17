@@ -1,0 +1,11 @@
+langgraph
+langchain-groq
+groq
+tavily-python
+sentence-transformers
+faiss-cpu
+rank-bm25
+streamlit
+python-dotenv
+pydantic
+pytest
