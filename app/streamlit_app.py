@@ -13,97 +13,216 @@ from src.config import MAX_DEBATE_ROUNDS, JUDGE_MODEL, DEBATER_MODEL
 # Page Config & Custom Styling
 # ---------------------------------------------------------
 st.set_page_config(
-    page_title="Veritas Agents - Multi-Agent Fact Checker",
+    page_title="Veritas Agents - AI Fact Checker",
     page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for rich aesthetics
+# High-aesthetic Light Theme CSS Injection
 st.markdown("""
 <style>
-    /* Dark glassmorphism container styles */
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    html, body, [class*="css"] {
+        font-family: 'Outfit', sans-serif;
+    }
+
+    /* Clean Light Theme Background */
     .stApp {
-        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-        color: #f8fafc;
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        color: #0f172a;
     }
-    .main-header {
+
+    /* Custom Header Hero Container */
+    .hero-container {
         text-align: center;
-        padding: 1.5rem 0 0.5rem 0;
-    }
-    .main-title {
-        font-size: 2.8rem;
-        font-weight: 800;
-        background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 0.2rem;
-    }
-    .sub-title {
-        font-size: 1.1rem;
-        color: #94a3b8;
-        font-weight: 400;
-        margin-bottom: 1.5rem;
-    }
-    .verdict-card {
-        padding: 1.8rem;
-        border-radius: 16px;
-        background: rgba(30, 41, 59, 0.7);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        padding: 2.2rem 1rem 1.4rem 1rem;
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
         margin-bottom: 2rem;
     }
-    .verdict-badge-true {
-        background-color: #059669;
-        color: #ecfdf5;
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        color: #0284c7;
         padding: 6px 16px;
         border-radius: 9999px;
+        font-size: 0.85rem;
         font-weight: 700;
-        font-size: 1.2rem;
-        display: inline-block;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.8rem;
+        text-transform: uppercase;
     }
-    .verdict-badge-false {
-        background-color: #dc2626;
-        color: #fef2f2;
-        padding: 6px 16px;
-        border-radius: 9999px;
-        font-weight: 700;
-        font-size: 1.2rem;
-        display: inline-block;
+
+    .hero-title {
+        font-size: 3rem;
+        font-weight: 800;
+        letter-spacing: -1px;
+        background: linear-gradient(135deg, #0284c7 0%, #4f46e5 50%, #7c3aed 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.4rem;
+        line-height: 1.15;
     }
-    .verdict-badge-unverifiable {
-        background-color: #d97706;
-        color: #fffbeb;
-        padding: 6px 16px;
-        border-radius: 9999px;
-        font-weight: 700;
-        font-size: 1.2rem;
-        display: inline-block;
+
+    .hero-subtitle {
+        font-size: 1.1rem;
+        color: #475569;
+        max-width: 700px;
+        margin: 0 auto;
+        font-weight: 400;
+        line-height: 1.6;
     }
-    .pro-card {
-        background: rgba(6, 78, 59, 0.3);
-        border-left: 4px solid #10b981;
-        padding: 1rem 1.2rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
+
+    /* Input Box Styling */
+    .stTextInput > div > div > input {
+        background-color: #ffffff !important;
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 12px !important;
+        color: #0f172a !important;
+        font-size: 1.05rem !important;
+        padding: 0.8rem 1.2rem !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
+        transition: all 0.25s ease !important;
     }
-    .con-card {
-        background: rgba(127, 29, 29, 0.3);
-        border-left: 4px solid #ef4444;
-        padding: 1rem 1.2rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
+
+    .stTextInput > div > div > input:focus {
+        border-color: #0284c7 !important;
+        box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.15) !important;
     }
+
+    /* Primary Button Styling */
+    .stButton > button {
+        background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%) !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        font-size: 1.05rem !important;
+        padding: 0.75rem 1.8rem !important;
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3) !important;
+        transition: all 0.25s ease !important;
+        width: 100% !important;
+    }
+
+    .stButton > button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 25px rgba(2, 132, 199, 0.4) !important;
+    }
+
+    /* Sub-claim Pills */
     .subclaim-pill {
-        background: rgba(99, 102, 241, 0.2);
-        border: 1px solid rgba(129, 140, 248, 0.4);
-        color: #e0e7ff;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 0.9rem;
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        color: #1e293b;
+        padding: 8px 18px;
+        border-radius: 9999px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 4px 8px 6px 0;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Light Theme Stance Cards */
+    .pro-card {
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        border-left: 5px solid #10b981;
+        border-radius: 14px;
+        padding: 1.3rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);
+        color: #064e3b;
+    }
+
+    .con-card {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-left: 5px solid #ef4444;
+        border-radius: 14px;
+        padding: 1.3rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.08);
+        color: #7f1d1d;
+    }
+
+    .stance-header-pro {
+        color: #047857;
+        font-weight: 700;
+        font-size: 1.05rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0.6rem;
+    }
+
+    .stance-header-con {
+        color: #b91c1c;
+        font-weight: 700;
+        font-size: 1.05rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0.6rem;
+    }
+
+    /* Light Theme Verdict Card */
+    .verdict-card {
+        background: #ffffff;
+        border-radius: 18px;
+        border: 1px solid #e2e8f0;
+        padding: 1.8rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+        margin-bottom: 2rem;
+    }
+
+    .verdict-badge-true {
+        background: #10b981;
+        color: #ffffff;
+        padding: 8px 22px;
+        border-radius: 9999px;
+        font-weight: 800;
+        font-size: 1.25rem;
+        letter-spacing: 0.5px;
         display: inline-block;
-        margin: 4px 6px 4px 0;
+    }
+
+    .verdict-badge-false {
+        background: #ef4444;
+        color: #ffffff;
+        padding: 8px 22px;
+        border-radius: 9999px;
+        font-weight: 800;
+        font-size: 1.25rem;
+        letter-spacing: 0.5px;
+        display: inline-block;
+    }
+
+    .verdict-badge-unverifiable {
+        background: #f59e0b;
+        color: #ffffff;
+        padding: 8px 22px;
+        border-radius: 9999px;
+        font-weight: 800;
+        font-size: 1.25rem;
+        letter-spacing: 0.5px;
+        display: inline-block;
+    }
+
+    /* Sidebar Light Customization */
+    section[data-testid="stSidebar"] {
+        background-color: #ffffff !important;
+        border-right: 1px solid #e2e8f0 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -111,12 +230,12 @@ st.markdown("""
 # ---------------------------------------------------------
 # Sidebar Pre-configured Benchmark Scenarios
 # ---------------------------------------------------------
-st.sidebar.image("https://img.icons8.com/isometric/100/scales.png", width=70)
+st.sidebar.image("https://img.icons8.com/isometric/100/scales.png", width=65)
 st.sidebar.title("Veritas Agents")
-st.sidebar.markdown("**Multi-Agent Debate & Fact-Checking Framework**")
+st.sidebar.markdown("<span style='color: #64748b; font-size: 0.9rem;'>Multi-Agent Adversarial Fact Checker</span>", unsafe_allow_html=True)
 
 benchmark_claims = {
-    "Select a pre-set claim...": "",
+    "Select a benchmark preset...": "",
     "1. Clear False": "The Great Wall of China is visible from space with the naked eye.",
     "2. Clear True": "Regular exercise reduces the risk of cardiovascular disease.",
     "3. Genuinely Ambiguous": "Moderate coffee consumption increases the risk of heart disease.",
@@ -124,13 +243,12 @@ benchmark_claims = {
     "5. Time-Sensitive": "Global lithium ion battery production volume doubled in the past 24 months."
 }
 
-selected_preset = st.sidebar.selectbox("🎯 Quick-Select Benchmark Scenario", list(benchmark_claims.keys()))
+selected_preset = st.sidebar.selectbox("🎯 Quick Benchmark Preset", list(benchmark_claims.keys()))
 default_input = benchmark_claims[selected_preset] if selected_preset and benchmark_claims[selected_preset] else ""
 
 st.sidebar.divider()
 st.sidebar.markdown("### ⚙️ Engine Parameters")
 
-# Number input + quick dropdown for debate rounds
 rounds_mode = st.sidebar.radio(
     "Debate Round Mode:",
     ["1 Round (Fast ~3s)", "2 Rounds (Balanced)", "3 Rounds (Deep Debate)", "Custom Number"],
@@ -147,20 +265,27 @@ else:
     rounds_input = st.sidebar.number_input("Custom Rounds (1-5)", min_value=1, max_value=5, value=1, step=1)
 
 st.sidebar.markdown(f"""
-- **Active Rounds**: `{rounds_input}`
-- **Judge Model**: `{JUDGE_MODEL}`
-- **Debater Model**: `{DEBATER_MODEL}`
-- **Search Engine**: Tavily Live Web API
-- **Guardrail**: Strict Evidence Grounding
+- ⚡ **Debater Model**: `{DEBATER_MODEL}`
+- 🏛️ **Judge Model**: `{JUDGE_MODEL}`
+- 🌐 **Live Search**: Tavily Advanced + DDGS
+- 🛡️ **Guardrail**: Active Grounding Verification
 """)
 
 st.sidebar.divider()
-st.sidebar.info("💡 **Cost & Speed Architecture**: Fast LPU models generate adversarial turns; 70B/120B model handles judicial synthesis.")
+st.sidebar.info("💡 **Cost & Speed Architecture**: Fast LPU models generate adversarial turns; 120B model handles judicial synthesis.")
 
 # ---------------------------------------------------------
 # Main UI Layout
 # ---------------------------------------------------------
-st.markdown('<div class="main-header"><div class="main-title">⚖️ Veritas Agents</div><div class="sub-title">Autonomous Multi-Agent Fact-Checking System (Claim → Pro ⇄ Con → Supreme Judge)</div></div>', unsafe_allow_html=True)
+st.markdown("""
+<div class="hero-container">
+    <div class="hero-badge">✨ Autonomous Fact-Checking Graph</div>
+    <div class="hero-title">⚖️ Veritas Agents</div>
+    <div class="hero-subtitle">
+        Multi-Agent Adversarial Debate System — Decomposes complex claims, executes parallel live web retrieval, and synthesizes calibrated judicial verdicts.
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 claim_input = st.text_input(
     "Ask your question or claim to verify:",
@@ -168,7 +293,7 @@ claim_input = st.text_input(
     placeholder="Ask your question or claim here..."
 )
 
-col_btn1, col_btn2 = st.columns([1, 4])
+col_btn1, col_btn2 = st.columns([1.2, 3.8])
 with col_btn1:
     run_button = st.button("🚀 Execute Fact Check", type="primary", use_container_width=True)
 
@@ -195,7 +320,6 @@ if run_button and claim_input.strip():
         node_name = list(step.keys())[0]
         node_output = step[node_name]
         
-        # Merge updated state keys
         for k, v in node_output.items():
             final_state[k] = v
             
@@ -203,10 +327,10 @@ if run_button and claim_input.strip():
             status_container.write(f"🧩 **Claim Decomposed**: {len(final_state.get('sub_claims', []))} atomic sub-claims")
         elif node_name == "pro_turn":
             cur_r = final_state.get("round", 1)
-            status_container.write(f"🟢 **Pro Agent Round {cur_r}**: Retrieved live web evidence & generated supporting argument")
+            status_container.write(f"🟢 **Pro Agent Round {cur_r}**: Retrieved 100% real web evidence & generated supporting argument")
         elif node_name == "con_turn":
             cur_r = final_state.get("round", 1)
-            status_container.write(f"🔴 **Con Agent Round {cur_r}**: Retrieved live web evidence & generated refuting argument")
+            status_container.write(f"🔴 **Con Agent Round {cur_r}**: Retrieved 100% real web evidence & generated refuting argument")
         elif node_name == "advance_round":
             status_container.write(f"🔄 **Advancing to Round {final_state.get('round', 1)}**")
         elif node_name == "judge":
@@ -238,16 +362,20 @@ if run_button and claim_input.strip():
     max_r = max([t.get("round", 1) for t in pro_turns + con_turns] or [1])
     
     for r in range(1, max_r + 1):
-        st.markdown(f"#### 🔔 Round {r}")
+        st.markdown(f"#### 🔔 Debate Round {r}")
         col_pro, col_con = st.columns(2)
         
         # Pro Turn
         with col_pro:
-            st.markdown(f"**🟢 PRO Agent (Supporting Stance)**")
             r_pro = [t for t in pro_turns if t.get("round") == r]
             if r_pro:
                 pt = r_pro[0]
-                st.markdown(f'<div class="pro-card">{pt.get("argument")}</div>', unsafe_allow_html=True)
+                st.markdown(f'''
+                <div class="pro-card">
+                    <div class="stance-header-pro">🟢 PRO AGENT (Supporting Stance)</div>
+                    <div>{pt.get("argument")}</div>
+                </div>
+                ''', unsafe_allow_html=True)
                 cited = pt.get("cited_evidence_ids", [])
                 if cited:
                     with st.expander(f"📚 Cited Sources ({len(cited)})"):
@@ -261,11 +389,15 @@ if run_button and claim_input.strip():
         
         # Con Turn
         with col_con:
-            st.markdown(f"**🔴 CON Agent (Refuting Stance)**")
             r_con = [t for t in con_turns if t.get("round") == r]
             if r_con:
                 ct = r_con[0]
-                st.markdown(f'<div class="con-card">{ct.get("argument")}</div>', unsafe_allow_html=True)
+                st.markdown(f'''
+                <div class="con-card">
+                    <div class="stance-header-con">🔴 CON AGENT (Refuting Stance)</div>
+                    <div>{ct.get("argument")}</div>
+                </div>
+                ''', unsafe_allow_html=True)
                 cited = ct.get("cited_evidence_ids", [])
                 if cited:
                     with st.expander(f"📚 Cited Sources ({len(cited)})"):
@@ -282,7 +414,7 @@ if run_button and claim_input.strip():
     # ---------------------------------------------------------
     # 3. Judicial Verdict Card
     # ---------------------------------------------------------
-    st.markdown("### 🏛️ Final Judicial Verdict")
+    st.markdown("### 🏛️ Supreme Judicial Verdict")
     verdict_data = debate_result.get("verdict") or {}
     verdict_str = str(verdict_data.get("verdict", "unverifiable")).lower()
     confidence = verdict_data.get("confidence", 50)
@@ -294,20 +426,20 @@ if run_button and claim_input.strip():
     
     st.markdown(f"""
     <div class="verdict-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;">
             <div>
-                <span style="font-size: 0.9rem; color: #94a3b8; font-weight: 600;">VERDICT LABEL</span><br/>
+                <span style="font-size: 0.85rem; color: #64748b; font-weight: 700; letter-spacing: 1px;">VERDICT LABEL</span><br/>
                 <span class="{badge_class}">{verdict_str.upper()}</span>
             </div>
-            <div style="text-align: right; width: 40%;">
-                <span style="font-size: 0.9rem; color: #94a3b8; font-weight: 600;">CALIBRATED CONFIDENCE: {confidence}%</span>
+            <div style="text-align: right; width: 45%;">
+                <span style="font-size: 0.85rem; color: #64748b; font-weight: 700; letter-spacing: 1px;">CALIBRATED CONFIDENCE: {confidence}%</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
     
     st.progress(confidence / 100.0)
     
-    st.markdown(f"**Judicial Rationale:**\n\n{rationale}")
+    st.markdown(f"<div style='margin-top: 1rem; color: #1e293b; line-height: 1.7;'><strong>Judicial Rationale:</strong><br/>{rationale}</div>", unsafe_allow_html=True)
     
     if uncertainty_note:
         st.warning(f"⚠️ **Uncertainty & Ambiguity Note:** {uncertainty_note}")
@@ -326,5 +458,5 @@ if run_button and claim_input.strip():
         c1.metric("Normalize Claim", f"{lat.get('normalize_seconds', 0)}s")
         c2.metric("Pro Turns Total", f"{sum(lat.get('pro_turns_seconds', [])):.2f}s")
         c3.metric("Con Turns Total", f"{sum(lat.get('con_turns_seconds', [])):.2f}s")
-        c4.metric("Supreme Judge (70B/120B)", f"{lat.get('judge_seconds', 0)}s")
-        st.caption(f"Total Execution Time: **{lat.get('total_seconds', 0)} seconds** across {len(evidence_pool)} retrieved web sources.")
+        c4.metric("Supreme Judge", f"{lat.get('judge_seconds', 0)}s")
+        st.caption(f"Total Execution Time: **{lat.get('total_seconds', 0)} seconds** across {len(evidence_pool)} retrieved real web sources.")
