@@ -1,4 +1,4 @@
-# ⚖️ Veritas Agents — Multi-Agent Fact-Checking System
+# ⚖️ Veritas Agents - Multi-Agent Fact-Checking System
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-orange.svg)](https://github.com/langchain-ai/langgraph)
