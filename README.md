@@ -83,6 +83,7 @@ veritas-agents/
 │       └── judge_prompt.py
 ├── app/
 │   └── streamlit_app.py      # Glassmorphism interactive Streamlit UI
+├── fact_check_cli.py         # Interactive CLI runner & Algorithmic Search Benchmark
 ├── eval/
 │   ├── test_claims.json      # 5 benchmark evaluation scenarios
 │   └── run_eval.py           # Calibration evaluation harness
@@ -127,6 +128,18 @@ python eval/run_eval.py
 ### 5. Launch Interactive Streamlit UI
 ```bash
 streamlit run app/streamlit_app.py
+```
+
+### 6. Command-Line Fact Checking & Algorithmic Search Benchmark
+```bash
+# Run a claim fact-check via CLI:
+python fact_check_cli.py --claim "Moderate coffee consumption increases the risk of heart disease." --rounds 1
+
+# Display formal PEAS and Environment specifications:
+python fact_check_cli.py --peas
+
+# Run BM25 vs FAISS vs Hybrid RRF algorithmic search benchmark:
+python fact_check_cli.py --benchmark-search
 ```
 
 ---
